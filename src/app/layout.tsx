@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "./ConvexClientProvider";
+import { Armata } from "next/font/google";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const armataSans = Armata({
+  variable: "--font-Armata-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
@@ -34,14 +31,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
-      >
-       <ConvexClientProvider>
-         {children}
-       </ConvexClientProvider>
-      </body>
-    </html>
+        <body className={`${armataSans.variable} antialiased `}>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
