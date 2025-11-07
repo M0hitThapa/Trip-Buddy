@@ -1,23 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Armata&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Carrois+Gothic&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
-.andika-regular {
-  font-family: "Andika", sans-serif;
-  font-weight: 500;
-  font-style: normal;
-}
-
-.carrois-gothic-regular {
-  font-family: "Carrois Gothic", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
 
 @theme {
   --shadow-input:
