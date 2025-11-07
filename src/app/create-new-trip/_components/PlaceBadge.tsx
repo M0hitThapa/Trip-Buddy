@@ -28,6 +28,7 @@ export default function PlaceBadge({ name, query, description, rating, price, ti
   const [placeDescription, setPlaceDescription] = useState<string | null>(description || null)
   const [placeAddress, setPlaceAddress] = useState<string | null>(address || null)
   const [imageError, setImageError] = useState(false)
+  const [altPhotoTried, setAltPhotoTried] = useState(false)
 
   // Only fetch if lookup is not disabled
   const shouldFetch = !disableLookup && !!(query || name)
@@ -85,6 +86,11 @@ export default function PlaceBadge({ name, query, description, rating, price, ti
     // Update rating and price level from details if not already set
     if (!rating && typeof details?.rating === 'number') setPlaceRating(details.rating as number)
     if (typeof details?.price_level === 'number') setPlacePriceLevel(details.price_level as number)
+
+    // If search didn't provide a photo, try details photos
+    if (!photoRef && Array.isArray(details?.photos) && details.photos.length > 0) {
+      setPhotoRef(details.photos[0].photo_reference || null)
+    }
   }, [detailsData, rating, placeDescription, placeAddress])
 
   const finalRating = typeof rating === 'number' ? rating : placeRating
@@ -113,7 +119,19 @@ export default function PlaceBadge({ name, query, description, rating, price, ti
             fill
             sizes="80px"
             className="object-cover"
-            onError={() => setImageError(true)}
+            onError={() => {
+              // Try a secondary photo from details if available once
+              try {
+                const alt = detailsData?.result?.photos?.[1]?.photo_reference
+                if (!altPhotoTried && alt && alt !== photoRef) {
+                  setAltPhotoTried(true)
+                  setImageError(false)
+                  setPhotoRef(alt)
+                  return
+                }
+              } catch {}
+              setImageError(true)
+            }}
           />
         ) : (
           <div className="flex flex-col items-center justify-center w-full h-full text-neutral-400">

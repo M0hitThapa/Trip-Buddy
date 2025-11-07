@@ -11,8 +11,8 @@ export async function GET(req: NextRequest) {
       .replace(/\s+/g, ' ')
       .trim()
     if (!query) return NextResponse.json({ results: [], status: 'ZERO_RESULTS' }, { status: 200 })
-    const key = process.env.GOOGLE_MAPS_API_KEY
-    if (!key) return NextResponse.json({ error: 'Missing GOOGLE_MAPS_API_KEY' }, { status: 500 })
+    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    if (!key) return NextResponse.json({ error: 'Missing GOOGLE_MAPS_API_KEY or NEXT_PUBLIC_GOOGLE_MAPS_API_KEY' }, { status: 500 })
 
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${key}`
     const res = await fetch(url, { next: { revalidate: 3600 } }) // Cache for 1 hour
@@ -44,5 +44,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
 
 

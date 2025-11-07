@@ -70,19 +70,63 @@ const ItineraryGrid = ({
     (costs ?? []).map((c) => [c.day, c])
   );
 
-  // Extract destination from first day's content for better place searches
+  // Extract destination from itinerary text for better place searches
   const destination = React.useMemo(() => {
     if (!itinerary?.length) return "";
-    const firstDay = itinerary[0];
-    const text = [
-      firstDay.title,
-      firstDay.morning,
-      firstDay.afternoon,
-      firstDay.evening,
-    ].join(" ");
-    // Try to extract city/country name (capitalized words)
-    const match = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/);
-    return match?.[1] || "";
+    const texts: string[] = [];
+    for (const d of itinerary) {
+      if (d.title) texts.push(d.title);
+      if (d.morning) texts.push(d.morning);
+      if (d.afternoon) texts.push(d.afternoon);
+      if (d.evening) texts.push(d.evening);
+    }
+    if (texts.length === 0) return "";
+
+    const STOPWORDS = new Set([
+      "Morning","Afternoon","Evening","Breakfast","Lunch","Dinner",
+      "Hotel","Cafe","Café","Adventure","Adventures","Day","Plan",
+      "Tour","Visit","Explore","Exploring","City","Center","Center",
+      "Park","Museum","Beach","Lake","River","Mountain"
+    ]);
+
+    const candidates: Record<string, number> = {};
+    const add = (s?: string) => {
+      if (!s) return;
+      const key = s.trim();
+      if (!key) return;
+      const firstToken = key.split(/\s+/)[0];
+      if (STOPWORDS.has(firstToken)) return;
+      // avoid overly generic one-word tokens
+      if (key.split(" ").length === 1 && STOPWORDS.has(key)) return;
+      candidates[key] = (candidates[key] || 0) + 1;
+    };
+
+    for (const t of texts) {
+      // Prefer phrases after "in" or "to"
+      const preps = t.match(/\b(?:in|to)\s+([A-Z][\w'\-]+(?:\s+[A-Z][\w'\-]+){0,2})/g);
+      if (preps) {
+        for (const m of preps) {
+          const cap = m.replace(/^(?:in|to)\s+/i, "").trim();
+          add(cap);
+        }
+      }
+      // General capitalized sequences up to 3 words
+      const caps = t.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b/g);
+      if (caps) caps.forEach((c) => add(c));
+    }
+
+    // Pick the most frequent, prefer multi-word, then longest
+    let best = "";
+    let bestScore = -1;
+    for (const [cand, count] of Object.entries(candidates)) {
+      const words = cand.split(" ").length;
+      const score = count * 10 + Math.min(words, 3) * 3 + cand.length * 0.01;
+      if (score > bestScore) {
+        bestScore = score;
+        best = cand;
+      }
+    }
+    return best;
   }, [itinerary]);
 
   // Cache photo references per day if AI didn't provide photos
