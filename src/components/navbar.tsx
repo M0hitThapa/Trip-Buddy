@@ -41,7 +41,7 @@ function Navbar() {
   const { isLoaded, isSignedIn } = useUser();
   return (
     <div className="relative ">
-      <div className="relative flex items-center justify-between max-w-6xl mx-auto     px-5 py-2 ">
+      <div className="relative flex items-center justify-between max-w-5xl mx-auto     px-5 py-2 ">
         <Link href="/" className="flex gap-2 text-2xl font-bold items-center">
           <svg
             className="w-8 h-8 text-gray-800"
@@ -71,12 +71,12 @@ function Navbar() {
               {link.title}
             </Link>
           ))}
-          <div className="h-full flex items-center space-x-4">
+          <div className="h-full flex items-center space-x-4 shadow-md/30 rounded-md shadow-neutral-900 ">
             {isSignedIn ? (
               <>
                 <button
                   onClick={() => onSend()}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md shadow-md transition-all duration-300 cursor-pointer font-semibold "
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md  transition-all duration-300 cursor-pointer font-semibold "
                 >
                   CreateTrip
                 </button>
@@ -85,7 +85,7 @@ function Navbar() {
               <>
                 <button
                   onClick={() => onSend()}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer font-semibold"
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md  transition-all duration-300 cursor-pointer font-semibold"
                 >
                   SignIn
                 </button>

@@ -83,10 +83,32 @@ const ItineraryGrid = ({
     if (texts.length === 0) return "";
 
     const STOPWORDS = new Set([
-      "Morning","Afternoon","Evening","Breakfast","Lunch","Dinner",
-      "Hotel","Cafe","Café","Adventure","Adventures","Day","Plan",
-      "Tour","Visit","Explore","Exploring","City","Center","Center",
-      "Park","Museum","Beach","Lake","River","Mountain"
+      "Morning",
+      "Afternoon",
+      "Evening",
+      "Breakfast",
+      "Lunch",
+      "Dinner",
+      "Hotel",
+      "Cafe",
+      "Café",
+      "Adventure",
+      "Adventures",
+      "Day",
+      "Plan",
+      "Tour",
+      "Visit",
+      "Explore",
+      "Exploring",
+      "City",
+      "Center",
+      "Centre",
+      "Park",
+      "Museum",
+      "Beach",
+      "Lake",
+      "River",
+      "Mountain",
     ]);
 
     const candidates: Record<string, number> = {};
@@ -103,7 +125,9 @@ const ItineraryGrid = ({
 
     for (const t of texts) {
       // Prefer phrases after "in" or "to"
-      const preps = t.match(/\b(?:in|to)\s+([A-Z][\w'\-]+(?:\s+[A-Z][\w'\-]+){0,2})/g);
+      const preps = t.match(
+        /\b(?:in|to)\s+([A-Z][\w'\-]+(?:\s+[A-Z][\w'\-]+){0,2})/g
+      );
       if (preps) {
         for (const m of preps) {
           const cap = m.replace(/^(?:in|to)\s+/i, "").trim();
@@ -133,6 +157,7 @@ const ItineraryGrid = ({
   const [photoRefsByDay, setPhotoRefsByDay] = useState<
     Record<number, string[]>
   >({});
+  const [photoErrors, setPhotoErrors] = useState<Set<number>>(new Set());
 
   // Build a unique list of places to visualize on the map
   const mapQueries = React.useMemo(() => {
@@ -157,7 +182,6 @@ const ItineraryGrid = ({
     };
     for (const it of itinerary) {
       // Don't add day titles to map
-      // add(it.title, destination, it.day, 'title')
       it.cafes?.forEach((c) => add(c, destination, it.day, "cafe"));
       it.hotels?.forEach((h) => add(h, destination, it.day, "hotel"));
       it.adventures?.forEach((a) => add(a, destination, it.day, "adventure"));
@@ -209,11 +233,14 @@ const ItineraryGrid = ({
     let cancelled = false;
     const run = async () => {
       const tasks = itinerary.map(async (it) => {
-        // Skip if photos already exist
+        // Skip if photos already exist or we already have an error
         if (Array.isArray(it.photos) && it.photos.length > 0) return;
         if (photoRefsByDay[it.day]?.length) return;
+        if (photoErrors.has(it.day)) return;
+
         const q = buildQuery(it);
         if (!q) return;
+
         try {
           console.debug(
             "[ItineraryGrid] fetching photo for day",
@@ -221,24 +248,48 @@ const ItineraryGrid = ({
             "query =",
             q
           );
+
           const res = await fetch(
             `/api/google/places/search?query=${encodeURIComponent(q)}`
           );
-          if (!res.ok) return;
+
+          if (!res.ok) {
+            console.warn(
+              `[ItineraryGrid] Search failed for day ${it.day}:`,
+              res.status,
+              res.statusText
+            );
+            if (!cancelled) {
+              setPhotoErrors((prev) => new Set(prev).add(it.day));
+            }
+            return;
+          }
+
           const data = await res.json();
           const ref: string | undefined =
             data?.results?.[0]?.photos?.[0]?.photo_reference;
+
           console.debug(
             "[ItineraryGrid] day",
             it.day,
             "photo ref found =",
             !!ref
           );
+
           if (!cancelled && ref) {
             setPhotoRefsByDay((prev) => ({ ...prev, [it.day]: [ref] }));
+          } else if (!cancelled) {
+            // No photo found, mark as error to prevent retrying
+            setPhotoErrors((prev) => new Set(prev).add(it.day));
           }
-        } catch {
-          // ignore fetch errors
+        } catch (err) {
+          console.error(
+            `[ItineraryGrid] Error fetching photo for day ${it.day}:`,
+            err
+          );
+          if (!cancelled) {
+            setPhotoErrors((prev) => new Set(prev).add(it.day));
+          }
         }
       });
       await Promise.all(tasks);
@@ -247,11 +298,12 @@ const ItineraryGrid = ({
     return () => {
       cancelled = true;
     };
-    // We intentionally don't include photoRefsByDay to avoid re-running on state change
+    // We intentionally don't include photoRefsByDay/photoErrors to avoid re-running on state change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itinerary]);
 
   if (!itinerary?.length) return null;
+
   return (
     <div className="p-6 h-full overflow-y-auto">
       {!hideTitle && (
@@ -266,7 +318,7 @@ const ItineraryGrid = ({
       )}
       <div className="space-y-6">
         {itinerary.map((item) => (
-          <section key={item.day} className=" overflow-hidden">
+          <section key={item.day} className="overflow-hidden">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-neutral-100">
               <div>
@@ -298,12 +350,10 @@ const ItineraryGrid = ({
             <div className="p-5 space-y-5">
               {/* Day description if provided */}
               {item.description && (
-                <div className="text-sm text-neutral-700 leading-relaxed  pl-4 py-2 border-l-4 border-rose-500">
+                <div className="text-sm text-neutral-700 leading-relaxed pl-4 py-2 border-l-4 border-rose-500">
                   {item.description}
                 </div>
               )}
-
-              {/* Optional photos grid if provided */}
 
               {/* Time blocks (single-column for readability) */}
               <div className="grid grid-cols-1 gap-4">
