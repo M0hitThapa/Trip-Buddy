@@ -41,7 +41,7 @@ function Hero() {
               Plan Your Trip in Seconds <br /> Powered by{" "}
               <span className="relative inline-block before:absolute before:-inset-1 before:block before:-skew-y-2 before:bg-teal-300/50 before:rounded before:border-2 before:border-white/80 before:shadow-input">
                 <span className="relative text-teal-800 text-shadow-2xl ">
-                  TripFriend
+                  TripBuddy
                 </span>
               </span>
             </span>

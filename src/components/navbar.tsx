@@ -59,7 +59,7 @@ function Navbar() {
             />
           </svg>
 
-          <h3 className="text-shadow-2xs delius-regular">TripFriend</h3>
+          <h3 className="text-shadow-2xs delius-regular">TripBuddy</h3>
         </Link>
         <div className="hidden md:flex items-center gap-6 text-md">
           {links.map((link, index) => (
